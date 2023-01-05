@@ -2,12 +2,17 @@
 <odoo>
 
     <menuitem
+        id="menu_ponto_debug"
+        name="Ponto Debug"
+        parent="base.menu_custom"
+        sequence="200"
+    />
+
+    <menuitem
         id="menu_ponto_buffer"
-        name="Show Ponto Buffer"
-        parent="account.account_reports_management_menu"
-        sequence="90"
+        parent="menu_ponto_debug"
+        sequence="10"
         action="action_ponto_buffer"
-        groups="account.group_account_user"
     />
 
 </odoo>

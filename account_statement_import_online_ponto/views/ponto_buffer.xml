@@ -21,7 +21,7 @@
                     <field name="effective_date" />
                 </group>
                 <group name="ponto_buffer_lines" string="Buffer Lines">
-                    <field name="buffer_line_ids" mode="tree">
+                    <field name="buffer_line_ids" mode="tree" nolabel="1" colspan="2">
                         <tree>
                             <field name="effective_date_time" />
                             <field name="ponto_id" />
@@ -32,4 +32,27 @@
             </form>
         </field>
     </record>
+
+    <record model="ir.ui.view" id="ponto_buffer_search">
+        <field name="model">ponto.buffer</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="provider_id" />
+                <field name="effective_date" />
+                <group name="groupby">
+                    <filter
+                        name="provider_groupby"
+                        string="Provider"
+                        context="{'group_by': 'provider_id'}"
+                    />
+                    <filter
+                        name="effective_date_groupby"
+                        string="Effective Date"
+                        context="{'group_by': 'effective_date'}"
+                    />
+                </group>
+            </search>
+        </field>
+    </record>
+
 </odoo>

@@ -27,6 +27,7 @@ class PontoBuffer(models.Model):
         comodel_name="ponto.buffer.line",
         inverse_name="buffer_id",
         readonly=True,
+        string="Buffer Lines",
     )
 
     def _store_transactions(self, provider, transactions):
