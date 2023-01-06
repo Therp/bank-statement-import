@@ -5,11 +5,12 @@ import json
 import logging
 import re
 from datetime import date, datetime
+from pprint import pformat
 
 import pytz
 from dateutil.relativedelta import relativedelta
 
-from odoo import _, api, fields, models
+from odoo import api, fields, models
 
 _logger = logging.getLogger(__name__)
 
@@ -22,6 +23,18 @@ class OnlineBankStatementProviderPonto(models.Model):
         default=61,
         help="By default buffers will be kept for 61 days.\n"
         "Set this to 0 to keep buffers indefinitely.",
+    )
+    ponto_date_field = fields.Selection(
+        [
+            ("execution_date", "Execution Date"),
+            ("value_date", "Value Date"),
+        ],
+        string="Ponto Date Field",
+        default="execution_date",
+        help="Select the Ponto date field that will be used for "
+        "the Odoo bank statement line date. If you change this parameter "
+        "on a provider that already has transactions, you will have to "
+        "purge the Ponto buffers.",
     )
 
     @api.model
@@ -40,7 +53,7 @@ class OnlineBankStatementProviderPonto(models.Model):
         """Fill buffer with data from Ponto.
 
         We will retrieve data from the latest transactions present in Ponto
-        backwards, until we find data that has an execution date before date_since.
+        backwards, until we find data that has a date before date_since.
         """
         interface_model = self.env["ponto.interface"]
         buffer_model = self.env["ponto.buffer"]
@@ -51,7 +64,7 @@ class OnlineBankStatementProviderPonto(models.Model):
         while transactions:
             buffer_model.sudo()._store_transactions(self, transactions)
             latest_identifier = transactions[-1].get("id")
-            earliest_datetime = self._ponto_get_execution_datetime(transactions[-1])
+            earliest_datetime = self._ponto_get_transaction_datetime(transactions[-1])
             if earliest_datetime < date_since:
                 break
             transactions = interface_model._get_transactions(
@@ -71,7 +84,7 @@ class OnlineBankStatementProviderPonto(models.Model):
         """Translate information from Ponto to Odoo bank statement lines."""
         self.ensure_one()
         _logger.debug(
-            _("Ponto obtain statement data for journal %s from %s to %s"),
+            "Ponto obtain statement data for journal %s from %s to %s",
             self.journal_id.name,
             date_since,
             date_until,
@@ -80,8 +93,8 @@ class OnlineBankStatementProviderPonto(models.Model):
         lines = line_model.sudo().search(
             [
                 ("buffer_id.provider_id", "=", self.id),
-                ("effective_date_time", ">=", date_since),
-                ("effective_date_time", "<=", date_until),
+                ("date_time", ">=", date_since),
+                ("date_time", "<=", date_until),
             ]
         )
         new_transactions = []
@@ -107,7 +120,7 @@ class OnlineBankStatementProviderPonto(models.Model):
             if attributes.get(x)
         ]
         ref = " ".join(ref_list)
-        date = self._ponto_get_execution_datetime(transaction)
+        date = self._ponto_get_transaction_datetime(transaction)
         vals_line = {
             "sequence": sequence,
             "date": date,
@@ -115,6 +128,7 @@ class OnlineBankStatementProviderPonto(models.Model):
             "payment_ref": attributes.get("remittanceInformation", ref),
             "unique_import_id": transaction["id"],
             "amount": attributes["amount"],
+            "raw_data": pformat(attributes),
         }
         if attributes.get("counterpartReference"):
             vals_line["account_number"] = attributes["counterpartReference"]
@@ -122,7 +136,7 @@ class OnlineBankStatementProviderPonto(models.Model):
             vals_line["partner_name"] = attributes["counterpartName"]
         return vals_line
 
-    def _ponto_get_execution_datetime(self, transaction):
+    def _ponto_get_transaction_datetime(self, transaction):
         """Get execution datetime for a transaction.
 
         Odoo often names variables containing date and time just xxx_date or
@@ -130,13 +144,17 @@ class OnlineBankStatementProviderPonto(models.Model):
         much for variables and fields of type datetime.
         """
         attributes = transaction.get("attributes", {})
-        return self._ponto_datetime_from_string(attributes.get("executionDate"))
+        if self.ponto_date_field == "value_date":
+            datetime_str = attributes.get("valueDate")
+        else:
+            datetime_str = attributes.get("executionDate")
+        return self._ponto_datetime_from_string(datetime_str)
 
-    def _ponto_datetime_from_string(self, date_str):
+    def _ponto_datetime_from_string(self, datetime_str):
         """Dates in Ponto are expressed in UTC, so we need to convert them
         to supplied tz for proper classification.
         """
-        dt = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+        dt = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%fZ")
         dt = dt.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(self.tz or "utc"))
         return dt.replace(tzinfo=None)
 

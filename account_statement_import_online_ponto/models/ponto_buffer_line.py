@@ -9,8 +9,8 @@ class PontoBufferLine(models.Model):
 
     _name = "ponto.buffer.line"
     _description = "Hold transactions retrieved from Ponto."
-    _order = "effective_date_time desc"
-    _rec_name = "effective_date_time"
+    _order = "date_time desc"
+    _rec_name = "date_time"
 
     buffer_id = fields.Many2one(
         comodel_name="ponto.buffer",
@@ -22,7 +22,7 @@ class PontoBufferLine(models.Model):
         required=True,
         readonly=True,
     )
-    effective_date_time = fields.Datetime(
+    date_time = fields.Datetime(
         required=True,
         readonly=True,
     )

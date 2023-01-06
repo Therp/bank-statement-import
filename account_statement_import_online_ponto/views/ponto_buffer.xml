@@ -6,7 +6,7 @@
         <field name="arch" type="xml">
             <tree>
                 <field name="provider_id" />
-                <field name="effective_date" />
+                <field name="date" />
             </tree>
         </field>
     </record>
@@ -18,12 +18,12 @@
             <form>
                 <group name="ponto_buffer_main">
                     <field name="provider_id" />
-                    <field name="effective_date" />
+                    <field name="date" />
                 </group>
                 <group name="ponto_buffer_lines" string="Buffer Lines">
                     <field name="buffer_line_ids" mode="tree" nolabel="1" colspan="2">
                         <tree>
-                            <field name="effective_date_time" />
+                            <field name="date_time" />
                             <field name="ponto_id" />
                             <field name="transaction_data" />
                         </tree>
@@ -38,7 +38,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="provider_id" />
-                <field name="effective_date" />
+                <field name="date" />
                 <group name="groupby">
                     <filter
                         name="provider_groupby"
@@ -46,9 +46,9 @@
                         context="{'group_by': 'provider_id'}"
                     />
                     <filter
-                        name="effective_date_groupby"
+                        name="date_groupby"
                         string="Effective Date"
-                        context="{'group_by': 'effective_date'}"
+                        context="{'group_by': 'date'}"
                     />
                 </group>
             </search>
