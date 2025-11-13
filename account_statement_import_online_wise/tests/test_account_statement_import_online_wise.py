@@ -12,12 +12,13 @@ from dateutil.relativedelta import relativedelta
 
 from odoo import fields
 from odoo.tests import common
+from odoo.tests import Form
 
 _module_ns = "odoo.addons.account_statement_import_online_wise"
 _provider_class = (
     _module_ns
-    + ".models.online_bank_statement_provider_transferwise"
-    + ".OnlineBankStatementProviderTransferwise"
+    + ".models.online_bank_statement_provider_wise"
+    + ".OnlineBankStatementProviderWise"
 )
 
 
@@ -44,7 +45,7 @@ class MockedResponse:
         return self.data
 
 
-class TestAccountBankAccountStatementImportOnlineTransferwise(common.TransactionCase):
+class TestAccountBankAccountStatementImportOnlineWise(common.TransactionCase):
     def setUp(self):
         super().setUp()
 
@@ -57,9 +58,9 @@ class TestAccountBankAccountStatementImportOnlineTransferwise(common.Transaction
         self.AccountBankStatementLine = self.env["account.bank.statement.line"]
 
         Provider = self.OnlineBankStatementProvider
-        self.transferwise_parse_transaction = lambda payload: (
-            Provider._transferwise_transaction_to_lines(
-                Provider._transferwise_preparse_transaction(
+        self.wise_parse_transaction = lambda payload: (
+            Provider._wise_transaction_to_lines(
+                Provider._wise_preparse_transaction(
                     json.loads(
                         payload,
                         parse_float=Decimal,
@@ -98,7 +99,7 @@ class TestAccountBankAccountStatementImportOnlineTransferwise(common.Transaction
         }"""
         )
 
-    def test_values_transferwise_profile(self):
+    def test_values_wise_profile(self):
         mocked_response = json.loads(
             """[
     {
@@ -119,38 +120,38 @@ class TestAccountBankAccountStatementImportOnlineTransferwise(common.Transaction
 ]""",
             parse_float=Decimal,
         )
-        values_transferwise_profile = []
+        values_wise_profile = []
         with mock.patch(
-            _provider_class + "._transferwise_retrieve",
+            _provider_class + "._wise_retrieve",
             return_value=mocked_response,
         ):
-            values_transferwise_profile = self.OnlineBankStatementProvider.with_context(
+            values_wise_profile = self.OnlineBankStatementProvider.with_context(
                 {"api_base": "https://example.com", "api_key": "dummy"}
-            ).values_transferwise_profile()
+            ).values_wise_profile()
         self.assertEqual(
-            values_transferwise_profile,
+            values_wise_profile,
             [
                 ("1234567890", "Alexey Pelykh (personal)"),
                 ("1234567891", "Brainbean Apps OÜ"),
             ],
         )
 
-    def test_values_transferwise_profile_no_key(self):
-        values_transferwise_profile = self.OnlineBankStatementProvider.with_context(
+    def test_values_wise_profile_no_key(self):
+        values_wise_profile = self.OnlineBankStatementProvider.with_context(
             {"api_base": "https://example.com"}
-        ).values_transferwise_profile()
-        self.assertEqual(values_transferwise_profile, [])
+        ).values_wise_profile()
+        self.assertEqual(values_wise_profile, [])
 
-    def test_values_transferwise_profile_error(self):
-        values_transferwise_profile = []
+    def test_values_wise_profile_error(self):
+        values_wise_profile = []
         with mock.patch(
-            _provider_class + "._transferwise_retrieve",
+            _provider_class + "._wise_retrieve",
             side_effect=lambda: Exception(),
         ):
-            values_transferwise_profile = self.OnlineBankStatementProvider.with_context(
+            values_wise_profile = self.OnlineBankStatementProvider.with_context(
                 {"api_base": "https://example.com", "api_key": "dummy"}
-            ).values_transferwise_profile()
-        self.assertEqual(values_transferwise_profile, [])
+            ).values_wise_profile()
+        self.assertEqual(values_wise_profile, [])
 
     def test_pull(self):
         journal = self.AccountJournal.create(
@@ -160,7 +161,7 @@ class TestAccountBankAccountStatementImportOnlineTransferwise(common.Transaction
                 "code": "BANK",
                 "currency_id": self.currency_eur.id,
                 "bank_statements_source": "online",
-                "online_bank_statement_provider": "transferwise",
+                "online_bank_statement_provider": "wise",
             }
         )
 
@@ -190,7 +191,7 @@ class TestAccountBankAccountStatementImportOnlineTransferwise(common.Transaction
             return json.loads(payload, parse_float=Decimal)
 
         with mock.patch(
-            _provider_class + "._transferwise_retrieve",
+            _provider_class + "._wise_retrieve",
             side_effect=mock_response,
         ):
             data = provider._obtain_statement_data(
@@ -210,7 +211,7 @@ class TestAccountBankAccountStatementImportOnlineTransferwise(common.Transaction
                 "code": "BANK",
                 "currency_id": self.currency_eur.id,
                 "bank_statements_source": "online",
-                "online_bank_statement_provider": "transferwise",
+                "online_bank_statement_provider": "wise",
             }
         )
 
@@ -219,7 +220,7 @@ class TestAccountBankAccountStatementImportOnlineTransferwise(common.Transaction
         provider.password = "API_KEY"
 
         with mock.patch(
-            _provider_class + "._transferwise_retrieve",
+            _provider_class + "._wise_retrieve",
             return_value=[],
         ):
             data = provider._obtain_statement_data(
@@ -237,7 +238,7 @@ class TestAccountBankAccountStatementImportOnlineTransferwise(common.Transaction
                 "code": "BANK",
                 "currency_id": self.currency_eur.id,
                 "bank_statements_source": "online",
-                "online_bank_statement_provider": "transferwise",
+                "online_bank_statement_provider": "wise",
             }
         )
 
@@ -245,7 +246,7 @@ class TestAccountBankAccountStatementImportOnlineTransferwise(common.Transaction
         provider.origin = "1234567891"
         provider.password = "API_KEY"
 
-        with common.Form(provider) as provider_form:
+        with Form(provider) as provider_form:
             provider_form.certificate_private_key = """
 -----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEAxC7aYWigCwPIB4mfyLpsALYPnqDm3/IC8I/3GdEwfK8eqXoF
@@ -286,14 +287,14 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "code": "BANK",
                 "currency_id": self.currency_eur.id,
                 "bank_statements_source": "online",
-                "online_bank_statement_provider": "transferwise",
+                "online_bank_statement_provider": "wise",
             }
         )
 
         provider = journal.online_bank_statement_provider_id
         provider.origin = "1234567891"
         provider.password = "API_KEY"
-        provider.button_transferwise_generate_key()
+        provider.button_wise_generate_key()
 
         with mock.patch(
             "urllib.request.urlopen",
@@ -315,7 +316,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
         self.assertEqual(data[1]["balance_end_real"], 42.0)
 
     def test_transaction_parse_1(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
     "type": "CREDIT",
     "date": "2000-01-01T00:00:00.000Z",
@@ -360,7 +361,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
         )
 
     def test_transaction_parse_2(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
     "type": "DEBIT",
     "date": "2000-01-01T00:00:00.000Z",
@@ -409,13 +410,13 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "amount": "-0.60",
                 "name": "Fee for TRANSFER-123456789",
                 "payment_ref": "Transaction fee for TRANSFER-123456789",
-                "partner_name": "Wise (former TransferWise)",
+                "partner_name": "Wise",
                 "unique_import_id": "DEBIT-TRANSFER-123456789-946684800-FEE",
             },
         )
 
     def test_transaction_parse_3(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
     "type": "DEBIT",
     "date": "2000-01-01T00:00:00.000Z",
@@ -471,7 +472,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
         )
 
     def test_transaction_parse_4(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
     "type": "DEBIT",
     "date": "2000-01-01T00:00:00.000Z",
@@ -544,13 +545,13 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "amount": "-1.23",
                 "name": "Fee for CARD-123456789",
                 "payment_ref": "Transaction fee for CARD-123456789",
-                "partner_name": "Wise (former TransferWise)",
+                "partner_name": "Wise",
                 "unique_import_id": "DEBIT-CARD-123456789-946684800-FEE",
             },
         )
 
     def test_transaction_parse_5(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
     "type": "DEBIT",
     "date": "2000-01-01T00:00:00.000Z",
@@ -610,14 +611,14 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "date": datetime(2000, 1, 1),
                 "name": "Fee for TRANSFER-123456789",
                 "payment_ref": "Transaction fee for TRANSFER-123456789",
-                "partner_name": "Wise (former TransferWise)",
+                "partner_name": "Wise",
                 "amount": "-5.21",
                 "unique_import_id": "DEBIT-TRANSFER-123456789-946684800-FEE",
             },
         )
 
     def test_transaction_parse_6(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
     "type": "CREDIT",
     "date": "2000-01-01T00:00:00.000Z",
@@ -654,7 +655,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
         )
 
     def test_transaction_parse_7(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
     "type": "CREDIT",
     "date": "2000-01-01T00:00:00.000Z",
@@ -712,7 +713,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
         )
 
     def test_transaction_parse_8(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
     "type": "DEBIT",
     "date": "2000-01-01T00:00:00.000Z",
@@ -775,13 +776,13 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "name": "Fee for BALANCE-123456789",
                 "payment_ref": "Transaction fee for BALANCE-123456789",
                 "amount": "-0.05",
-                "partner_name": "Wise (former TransferWise)",
+                "partner_name": "Wise",
                 "unique_import_id": "DEBIT-BALANCE-123456789-946684800-FEE",
             },
         )
 
     def test_transaction_parse_9(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
             "type": "CREDIT",
             "date": "2000-01-01T00:00:00.000Z",
@@ -823,13 +824,13 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "name": "Fee for TRANSFER-123456789",
                 "payment_ref": "Transaction fee for TRANSFER-123456789",
                 "amount": "-0.68",
-                "partner_name": "Wise (former TransferWise)",
+                "partner_name": "Wise",
                 "unique_import_id": "CREDIT-TRANSFER-123456789-946684800-FEE",
             },
         )
 
     def test_transaction_parse_10(self):
-        lines = self.transferwise_parse_transaction(
+        lines = self.wise_parse_transaction(
             """{
             "type": "CREDIT",
             "date": "2000-01-01T00:00:00.000Z",
@@ -875,7 +876,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "name": "Fee for TRANSFER-123456789",
                 "payment_ref": "Transaction fee for TRANSFER-123456789",
                 "amount": "4.33",
-                "partner_name": "Wise (former TransferWise)",
+                "partner_name": "Wise",
                 "unique_import_id": "CREDIT-TRANSFER-123456789-946684800-FEE",
             },
         )
