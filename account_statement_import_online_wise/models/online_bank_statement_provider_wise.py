@@ -33,10 +33,7 @@ class OnlineBankStatementProviderWise(models.Model):
     # NOTE: This is needed to workaround possible multiple 'origin' fields
     # present in the same view, resulting in wrong field view configuraion
     # if more than one is widget="dynamic_dropdown"
-    wise_profile = fields.Char(
-        related="origin",
-        readonly=False,
-    )
+    wise_profile = fields.Char(related="origin", readonly=False, string="Wise Profile")
 
     @api.model
     def values_wise_profile(self):
@@ -50,12 +47,12 @@ class OnlineBankStatementProviderWise(models.Model):
         except BaseException:
             _logger.warning("Unable to get profiles", exc_info=True)
             return []
+
         return list(
             map(
                 lambda entry: (
                     str(entry["id"]),
-                    "%s %s (personal)"
-                    % (
+                    "{} {} (personal)".format(
                         entry["details"]["firstName"],
                         entry["details"]["lastName"],
                     )
@@ -253,7 +250,7 @@ class OnlineBankStatementProviderWise(models.Model):
                     "amount": str(fees_value),
                     "date": date,
                     "partner_name": "Wise",
-                    "unique_import_id": "%s-FEE" % unique_import_id,
+                    "unique_import_id": f"{unique_import_id}-FEE",
                     "payment_ref": _("Transaction fee for %s") % reference_number,
                 }
             ]
@@ -281,7 +278,9 @@ class OnlineBankStatementProviderWise(models.Model):
             if e.code != 403 or e.headers.get("X-2FA-Approval-Result") != "REJECTED":
                 raise e
             if not private_key:
-                raise UserError(_("Strong Customer Authentication is not configured"))
+                raise UserError(
+                    _("Strong Customer Authentication is not configured")
+                ) from e
             one_time_token = e.headers["X-2FA-Approval"]
             signature = private_key.sign(
                 one_time_token.encode(),
@@ -306,7 +305,7 @@ class OnlineBankStatementProviderWise(models.Model):
         if not api_key:
             raise UserError(_("No API key specified!"))
         request = urllib.request.Request(url)
-        request.add_header("Authorization", "Bearer %s" % api_key)
+        request.add_header("Authorization", f"Bearer {api_key}")
         if ott and signature:
             request.add_header("X-2FA-Approval", ott)
             request.add_header("X-Signature", signature)
@@ -335,9 +334,9 @@ class OnlineBankStatementProviderWise(models.Model):
                 )
                 .decode()
             )
-        except BaseException:
+        except BaseException as exception:
             _logger.warning("Unable to parse key", exc_info=True)
-            raise UserError(_("Unable to parse key"))
+            raise UserError(_("Unable to parse key")) from exception
 
     def _wise_generate_key(self):
         self.ensure_one()

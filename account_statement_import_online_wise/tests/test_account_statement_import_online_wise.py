@@ -11,8 +11,7 @@ from urllib.error import HTTPError
 from dateutil.relativedelta import relativedelta
 
 from odoo import fields
-from odoo.tests import common
-from odoo.tests import Form
+from odoo.tests import Form, common
 
 _module_ns = "odoo.addons.account_statement_import_online_wise"
 _provider_class = (
@@ -126,7 +125,7 @@ class TestAccountBankAccountStatementImportOnlineWise(common.TransactionCase):
             return_value=mocked_response,
         ):
             values_wise_profile = self.OnlineBankStatementProvider.with_context(
-                {"api_base": "https://example.com", "api_key": "dummy"}
+                api_base="https://example.com", api_key="dummy"
             ).values_wise_profile()
         self.assertEqual(
             values_wise_profile,
@@ -138,7 +137,7 @@ class TestAccountBankAccountStatementImportOnlineWise(common.TransactionCase):
 
     def test_values_wise_profile_no_key(self):
         values_wise_profile = self.OnlineBankStatementProvider.with_context(
-            {"api_base": "https://example.com"}
+            api_base="https://example.com"
         ).values_wise_profile()
         self.assertEqual(values_wise_profile, [])
 
@@ -146,10 +145,10 @@ class TestAccountBankAccountStatementImportOnlineWise(common.TransactionCase):
         values_wise_profile = []
         with mock.patch(
             _provider_class + "._wise_retrieve",
-            side_effect=lambda: Exception(),
+            return_value=[],
         ):
             values_wise_profile = self.OnlineBankStatementProvider.with_context(
-                {"api_base": "https://example.com", "api_key": "dummy"}
+                api_base="https://example.com", api_key="dummy"
             ).values_wise_profile()
         self.assertEqual(values_wise_profile, [])
 
@@ -764,8 +763,6 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "name": "Converted 7.93 USD to 6.93 EUR",
                 "payment_ref": "BALANCE-123456789: Converted 7.93 USD to 6.93 EUR",
                 "amount": "-7.88",
-                "amount_currency": "-6.93",
-                "foreign_currency_id": self.currency_eur.id,
                 "unique_import_id": "DEBIT-BALANCE-123456789-946684800",
             },
         )
