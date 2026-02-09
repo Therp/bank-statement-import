@@ -97,7 +97,7 @@ class OnlineBankStatementProviderTransferwise(models.Model):
             date_until = date_until.astimezone(pytz.utc).replace(tzinfo=None)
 
         # Get corresponding balance by currency
-        url = api_base + "/v1/borderless-accounts?profileId={}".format(self.origin)
+        url = api_base + f"/v1/borderless-accounts?profileId={self.origin}"
         data = self._transferwise_retrieve(url, api_key, private_key)
         if not data:
             return None
@@ -186,7 +186,7 @@ class OnlineBankStatementProviderTransferwise(models.Model):
         description = details.get("description")
         pay_ref = reference_number
         if description:
-            pay_ref = "{}: {}".format(pay_ref, description)
+            pay_ref = f"{pay_ref}: {description}"
         amount = transaction["amount"]
         amount_value = amount.get("value", 0)
         fees_value = total_fees.get("value", Decimal())
@@ -195,10 +195,8 @@ class OnlineBankStatementProviderTransferwise(models.Model):
         else:
             fees_value = fees_value.copy_sign(amount_value)
         amount_value -= fees_value
-        unique_import_id = "{}-{}-{}".format(
-            transaction_type,
-            reference_number,
-            int(date.timestamp()),
+        unique_import_id = (
+            f"{transaction_type}-{reference_number}-{int(date.timestamp())}"
         )
         line = {
             "name": payment_reference or description or "",
