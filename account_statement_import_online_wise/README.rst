@@ -1,6 +1,6 @@
-===================================================
-Online Bank Statements: Wise.com (TransferWise.com)
-===================================================
+================================
+Online Bank Statements: Wise.com
+================================
 
 .. 
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -29,8 +29,7 @@ Online Bank Statements: Wise.com (TransferWise.com)
 |badge1| |badge2| |badge3| |badge4| |badge5|
 
 This module provides online bank statements from
-`Wise.com <https://wise.com/>`__. (formely
-`TransferWise.com <https://transferwise.com/>`__).
+`Wise.com <https://wise.com/>`__.
 
 **Table of contents**
 
@@ -45,8 +44,8 @@ To configure online bank statements provider:
 1. Go to *Invoicing > Configuration > Bank Accounts*
 2. Open bank account to configure and edit it
 3. Set *Bank Feeds* to *Online*
-4. Select *Wise.com (TransferWise.com)* as online bank statements
-   provider in *Online Bank Statements (OCA)* section
+4. Select *Wise.com* as online bank statements provider in *Online Bank
+   Statements (OCA)* section
 5. Save the bank account
 6. Click on provider and configure provider-specific settings.
 
@@ -56,8 +55,8 @@ or, alternatively:
 2. Open settings of the corresponding journal account
 3. Switch to *Bank Account* tab
 4. Set *Bank Feeds* to *Online*
-5. Select *Wise.com (TransferWise.com)* as online bank statements
-   provider in *Online Bank Statements (OCA)* section
+5. Select *Wise.com* as online bank statements provider in *Online Bank
+   Statements (OCA)* section
 6. Save the bank account
 7. Click on provider and configure provider-specific settings.
 
@@ -77,6 +76,9 @@ To configure Strong Customer Authentication:
 paste manually-generate private and public keys #. Navigate to
 `Wise.com <https://wise.com/public-keys/>`__ and register the public
 key.
+
+Note that it's no longer possible to sign API requests with public keys
+on Personal Accounts.
 
 Bug Tracker
 ===========

@@ -10,3 +10,6 @@ To configure Strong Customer Authentication:
 #\. Go to provider-specific settings and either press *Generate Key* or
 paste manually-generate private and public keys \#. Navigate to
 [Wise.com](https://wise.com/public-keys/) and register the public key.
+
+Note that it's no longer possible to sign API requests with public keys
+on Personal Accounts.

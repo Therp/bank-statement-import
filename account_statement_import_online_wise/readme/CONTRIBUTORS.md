@@ -1,2 +1,2 @@
 - [CorporateHub](https://corporatehub.eu/)
-  - Alexey Pelykh \<<alexey.pelykh@corphub.eu>\>
+  - Alexey Pelykh \<alexey.pelykh@corphub.eu\>
